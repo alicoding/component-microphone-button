@@ -1,0 +1,130 @@
+<polymer-element name="ceci-microphone-button" attributes="textcolor buttoncolor buttonactivecolor label" extends="ceci-element"
+  label="Record"
+  textcolor="#ffffff"
+  buttoncolor="#4DB227"
+  buttonactivecolor="#358915">
+  <ceci-definition>
+    {
+      "tags": ["microphone", "button", "audio", "clip"],
+      "thumbnail": "./thumbnail.png",
+      "description": "Broadcasts an audio clip recorded using your microphone.",
+      "name": "Microphone Button",
+      "broadcasts": {
+        "clip": {
+          "label": "clip",
+          "description": "An audio clip from your microphone.",
+          "default": true
+        }
+      },
+      "listeners": {
+        "start": {
+          "description": "Start a microphone recording.",
+          "label": "start"
+        },
+        "stop": {
+          "description": "Stop a microphone recording.",
+          "label": "stop"
+        }
+      },
+      "attributes": {
+        "label": {
+          "label": "Label",
+          "description": "Text shown on the button.",
+          "editable": "text",
+          "listener": true
+        },
+        "textcolor": {
+          "label": "Text Color",
+          "description": "Color of the text on the button's label.",
+          "editable": "color",
+          "listener": true
+        },
+        "buttoncolor": {
+          "label": "Button Color",
+          "description": "Background color of the button.",
+          "editable": "color",
+          "listener": true
+        },
+        "buttonactivecolor": {
+          "label": "Button Active Color",
+          "description": "Background color of the button while it is being clicked or tapped.",
+          "editable": "color",
+          "listener": true
+        }
+      }
+    }
+  </ceci-definition>
+  <template>
+    <link rel="stylesheet" href="component.css"></link>
+    <button id="button" on-click="{{click}}">{{label}}</button>
+    <shadow></shadow>
+  </template>
+  <script>
+    Polymer('ceci-microphone-button', {
+      ready: function () {
+        this.super();
+        var that = this;
+        var mouseUpHandler = function(evt) {
+          window.removeEventListener("mouseup", mouseUpHandler);
+          that.$.button.style.backgroundColor = that.buttoncolor;
+        };
+        var mouseDownHandler = function(evt) {
+          window.addEventListener("mouseup", mouseUpHandler);
+          that.$.button.style.backgroundColor = that.buttonactivecolor;
+        };
+        this.$.button.addEventListener("mousedown", mouseDownHandler);
+      },
+      attached: function() {
+        this.super();
+        navigator.getMedia = ( navigator.getUserMedia ||
+                               navigator.webkitGetUserMedia ||
+                               navigator.mozGetUserMedia ||
+                               navigator.msGetUserMedia );
+        var that = this;
+        var button = this.$.button;
+
+        if (navigator.getMedia) {
+          var audioCtx = new AudioContext();
+
+          navigator.getMedia (
+            {audio: true},
+
+            function(stream) {
+              console.log("good to go");
+
+              var mediaRecorder = new MediaRecorder(stream);
+
+              button.onmousedown = function() {
+                console.log("starting recorder");
+                mediaRecorder.start();
+              };
+
+              button.onmouseup = function() {
+                console.log("stopping recorder");
+                mediaRecorder.stop();
+              };
+
+              var processData = function(e) {
+                console.log("data available after recording");
+                var audioURL = window.URL.createObjectURL(e.data);
+                that.broadcast('clip', audioURL);
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = processData;
+              };
+
+              mediaRecorder.ondataavailable = processData;
+            },
+
+            function(err) { console.log('The following gUM error occured: ' + err); }
+          );
+        }
+      },
+      textcolorChanged: function (oldValue, newValue) {
+        this.$.button.style.color = newValue;
+      },
+      buttoncolorChanged: function (oldValue, newValue) {
+        this.$.button.style.backgroundColor = newValue;
+      }
+    });
+  </script>
+</polymer-element>
