@@ -3,7 +3,7 @@
   width: 100%;
 }
 
-:host span {
+:host button {
   font-family: "FiraSans", sans-serif;
   cursor: pointer;
   position: relative;
@@ -25,6 +25,9 @@
   color: #ffffff;
   width: 100%;
   margin: 0;
+}
+
+:host button {
   border: none;
 }
 
