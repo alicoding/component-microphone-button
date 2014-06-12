@@ -1,8 +1,9 @@
-<polymer-element name="ceci-microphone-button" attributes="textcolor buttoncolor buttonactivecolor label" extends="ceci-element"
-  label="Record"
+<polymer-element name="ceci-microphone-button" attributes="textcolor buttoncolor buttonactivecolor record done" extends="ceci-element"
+  record="Record"
+  done="Done"
   textcolor="#ffffff"
   buttoncolor="#4DB227"
-  buttonactivecolor="#358915">
+  buttonactivecolor="#FF0000">
   <ceci-definition>
     {
       "tags": ["microphone", "button", "audio", "clip"],
@@ -27,37 +28,40 @@
         }
       },
       "attributes": {
-        "label": {
-          "label": "Label",
+        "record": {
+          "label": "Record",
           "description": "Text shown on the button.",
-          "editable": "text",
-          "listener": true
+          "editable": "text"
+        },
+        "done": {
+          "label": "Done",
+          "description": "Text shown on the button.",
+          "editable": "text"
         },
         "textcolor": {
           "label": "Text Color",
           "description": "Color of the text on the button's label.",
-          "editable": "color",
-          "listener": true
+          "editable": "color"
         },
         "buttoncolor": {
           "label": "Button Color",
           "description": "Background color of the button.",
-          "editable": "color",
-          "listener": true
+          "editable": "color"
         },
         "buttonactivecolor": {
           "label": "Button Active Color",
           "description": "Background color of the button while it is being clicked or tapped.",
-          "editable": "color",
-          "listener": true
+          "editable": "color"
         }
       }
     }
   </ceci-definition>
   <template>
     <link rel="stylesheet" href="component.css"></link>
-    <button id="startButton">{{label}}</button>
-    <button id="stopButton">{{label}}</button>
+    <div class="button">
+      <button id="startButton">{{ record }}</button>
+      <button id="stopButton">{{ done }}</button>
+    </div>
     <shadow></shadow>
   </template>
   <script>
@@ -66,12 +70,24 @@
         this.super();
         this.startButton = this.shadowRoot.querySelector("#startButton");
         this.stopButton = this.shadowRoot.querySelector("#stopButton");
+        this.bg = this.shadowRoot.querySelector(".button");
+        this.bg.style.background = this.buttoncolor;
         navigator.getMedia = ( navigator.getUserMedia ||
                                navigator.webkitGetUserMedia ||
                                navigator.mozGetUserMedia ||
                                navigator.msGetUserMedia );
       },
       attached: function() {
+        if(!window.MediaRecorder) {
+          alert(this.gettext("your browser does not support recording"));;
+          window.MediaRecorder = function() {
+            var noop = function(){};
+            this.start = noop;
+            this.stop = noop;
+            this.ondataavailable = false
+          };
+        }
+
         this.super();
         console.log(this);
         var that = this;
@@ -90,11 +106,17 @@
               that.startButton.onclick = function() {
                 console.log("starting recorder");
                 mediaRecorder.start();
+                that.bg.style.background = that.buttonactivecolor;
+                that.startButton.style.display = "none";
+                that.stopButton.style.display = "block";
               };
 
               that.stopButton.onclick = function() {
                 console.log("stopping recorder");
                 mediaRecorder.stop();
+                that.bg.style.background = that.buttoncolor;
+                that.stopButton.style.display = "none";
+                that.startButton.style.display = "block";
               };
 
               var processData = function(e) {
@@ -106,6 +128,7 @@
               };
 
               mediaRecorder.ondataavailable = processData;
+              that.startButton.style.display = "block";
             },
 
             function(err) { console.log('The following gUM error occured: ' + err); }
