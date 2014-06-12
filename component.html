@@ -2,7 +2,7 @@
   label="Record"
   textcolor="#ffffff"
   buttoncolor="#4DB227"
-  buttonactivecolor="#AA270F">
+  buttonactivecolor="#358915">
   <ceci-definition>
     {
       "tags": ["microphone", "button", "audio", "clip"],
@@ -56,7 +56,8 @@
   </ceci-definition>
   <template>
     <link rel="stylesheet" href="component.css"></link>
-    <span id="button" on-click="{{click}}">{{label}}</span>
+    <button id="startButton">{{label}}</button>
+    <button id="endButton">{{label}}</button>
     <shadow></shadow>
   </template>
   <script>
@@ -64,17 +65,6 @@
       ready: function () {
         this.super();
         var that = this;
-        var mouseUpHandler = function(evt) {
-          window.removeEventListener("mouseup", mouseUpHandler);
-          window.removeEventListener("touchend", mouseUpHandler);
-          that.$.button.style.backgroundColor = that.buttoncolor;
-        };
-        var mouseDownHandler = function(evt) {
-          window.addEventListener("mouseup", mouseUpHandler);
-          window.addEventListener("touchend", mouseUpHandler);
-          that.$.button.style.backgroundColor = that.buttonactivecolor;
-        };
-        this.$.button.addEventListener("mousedown", mouseDownHandler);
       },
       attached: function() {
         this.super();
@@ -82,12 +72,13 @@
                                navigator.webkitGetUserMedia ||
                                navigator.mozGetUserMedia ||
                                navigator.msGetUserMedia );
-        var that = this;
-        var button = this.$.button;
 
-        if (!window.MediaRecorder) {
-          return alert("your browser does not support WebAudio recording through the microphone.");
-        }
+        var that = this;
+
+        var startbutton = this.$.startButton;
+        var endbutton = this.$.endButton;
+
+        console.log(startButton, endButton);
 
         if (navigator.getMedia) {
           var audioCtx = new AudioContext();
@@ -96,30 +87,22 @@
             {audio: true},
 
             function(stream) {
+              console.log("good to go");
+
               var mediaRecorder = new MediaRecorder(stream);
 
-              var recording = false;
-
-              var start = function() {
-                recording = true;
+              startButton.onclick = function() {
+                console.log("starting recorder");
                 mediaRecorder.start();
               };
 
-              button.addEventListener("mousedown", start);
-              button.addEventListener("touchstart", start);
-
-              var stop = function() {
-                if (recording) {
-                  mediaRecorder.stop();
-                  recording = false;
-                }
+              endButton.onclick = function() {
+                console.log("stopping recorder");
+                mediaRecorder.stop();
               };
 
-              window.addEventListener("mouseup", stop);
-              window.addEventListener("touchend", stop);
-
-              // this kicks in once stop yields data from the recorder
               var processData = function(e) {
+                console.log("data available after recording");
                 var audioURL = window.URL.createObjectURL(e.data);
                 that.broadcast('clip', audioURL);
                 mediaRecorder = new MediaRecorder(stream);
@@ -132,12 +115,6 @@
             function(err) { console.log('The following gUM error occured: ' + err); }
           );
         }
-      },
-      textcolorChanged: function (oldValue, newValue) {
-        this.$.button.style.color = newValue;
-      },
-      buttoncolorChanged: function (oldValue, newValue) {
-        this.$.button.style.backgroundColor = newValue;
       }
     });
   </script>
