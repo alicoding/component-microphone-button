@@ -57,28 +57,24 @@
   <template>
     <link rel="stylesheet" href="component.css"></link>
     <button id="startButton">{{label}}</button>
-    <button id="endButton">{{label}}</button>
+    <button id="stopButton">{{label}}</button>
     <shadow></shadow>
   </template>
   <script>
     Polymer('ceci-microphone-button', {
       ready: function () {
         this.super();
-        var that = this;
-      },
-      attached: function() {
-        this.super();
+        this.startButton = this.shadowRoot.querySelector("#startButton");
+        this.stopButton = this.shadowRoot.querySelector("#stopButton");
         navigator.getMedia = ( navigator.getUserMedia ||
                                navigator.webkitGetUserMedia ||
                                navigator.mozGetUserMedia ||
                                navigator.msGetUserMedia );
-
+      },
+      attached: function() {
+        this.super();
+        console.log(this);
         var that = this;
-
-        var startbutton = this.shadowRoot.querySelector("#startButton");
-        var endbutton = this.shadowRoot.querySelector("#endButton");
-
-        console.log(startButton, endButton);
 
         if (navigator.getMedia) {
           var audioCtx = new AudioContext();
@@ -91,12 +87,12 @@
 
               var mediaRecorder = new MediaRecorder(stream);
 
-              startButton.onclick = function() {
+              that.startButton.onclick = function() {
                 console.log("starting recorder");
                 mediaRecorder.start();
               };
 
-              endButton.onclick = function() {
+              that.stopButton.onclick = function() {
                 console.log("stopping recorder");
                 mediaRecorder.stop();
               };
