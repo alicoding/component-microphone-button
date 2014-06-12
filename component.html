@@ -2,7 +2,7 @@
   label="Record"
   textcolor="#ffffff"
   buttoncolor="#4DB227"
-  buttonactivecolor="#358915">
+  buttonactivecolor="#AA270F">
   <ceci-definition>
     {
       "tags": ["microphone", "button", "audio", "clip"],
@@ -66,10 +66,12 @@
         var that = this;
         var mouseUpHandler = function(evt) {
           window.removeEventListener("mouseup", mouseUpHandler);
+          window.removeEventListener("touchend", mouseUpHandler);
           that.$.button.style.backgroundColor = that.buttoncolor;
         };
         var mouseDownHandler = function(evt) {
           window.addEventListener("mouseup", mouseUpHandler);
+          window.addEventListener("touchend", mouseUpHandler);
           that.$.button.style.backgroundColor = that.buttonactivecolor;
         };
         this.$.button.addEventListener("mousedown", mouseDownHandler);
@@ -83,6 +85,10 @@
         var that = this;
         var button = this.$.button;
 
+        if (!window.MediaRecorder) {
+          return alert("your browser does not support WebAudio recording through the microphone.");
+        }
+
         if (navigator.getMedia) {
           var audioCtx = new AudioContext();
 
@@ -90,22 +96,30 @@
             {audio: true},
 
             function(stream) {
-              console.log("good to go");
-
               var mediaRecorder = new MediaRecorder(stream);
 
-              button.onmousedown = function() {
-                console.log("starting recorder");
+              var recording = false;
+
+              var start = function() {
+                recording = true;
                 mediaRecorder.start();
               };
 
-              button.onmouseup = function() {
-                console.log("stopping recorder");
-                mediaRecorder.stop();
+              button.addEventListener("mousedown", start);
+              button.addEventListener("touchstart", start);
+
+              var stop = function() {
+                if (recording) {
+                  mediaRecorder.stop();
+                  recording = false;
+                }
               };
 
+              window.addEventListener("mouseup", stop);
+              window.addEventListener("touchend", stop);
+
+              // this kicks in once stop yields data from the recorder
               var processData = function(e) {
-                console.log("data available after recording");
                 var audioURL = window.URL.createObjectURL(e.data);
                 that.broadcast('clip', audioURL);
                 mediaRecorder = new MediaRecorder(stream);
